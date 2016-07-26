@@ -6,6 +6,7 @@
 
 import spellRule
 import csv
+import os
 
 
 class genFakeWordPair:
@@ -143,7 +144,11 @@ class genFakeWordPair:
 
 
     def writeToFile(self):
-        with open('caseIssue.csv', 'wb') as f:
+        try:
+            os.mkdir("genData")
+        except OSError:
+            print "genData dir exsists\n"
+        with open('./genData/caseIssue.csv', 'wb') as f:
             write = csv.writer(f)
             for key in self.caseIssue.keys():
                 line = []
@@ -151,20 +156,21 @@ class genFakeWordPair:
                 line.extend(self.caseIssue[key])
                 write.writerow(line)
 
-        with open('missingIssue.csv', 'wb') as f:
+        with open('./genData/missingIssue.csv', 'wb') as f:
             write = csv.writer(f)
             for key in self.missingIssue.keys():
                 line = []
                 line.append(key)
                 line.extend(self.missingIssue[key])
                 write.writerow(line)
-        with open('spellIssue.csv', 'wb') as f:
+        with open('./genData/spellIssue.csv', 'wb') as f:
             write = csv.writer(f)
             for key in self.spellIssue.keys():
                 line = []
                 line.append(key)
                 line.extend(self.spellIssue[key])
                 write.writerow(line)
+
     def genAndWrite(self):
         self.genMissingIssue()
         self.genCaseIssue()
@@ -172,7 +178,3 @@ class genFakeWordPair:
         self.writeToFile()
 
 
-a = genFakeWordPair()
-
-a.readWord("DHCPSuperscopeV4")
-a.genCaseIssue()
