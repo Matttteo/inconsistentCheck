@@ -1,0 +1,8 @@
+# pycharm
+*.xml
+*.iml
+# generated data
+*.csv
+
+# compiled python file
+*.pyc
