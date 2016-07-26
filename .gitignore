@@ -1,5 +1,8 @@
 # pycharm
-*.iml
+*.xml
 
 # generated data
 *.csv
+
+# compiled python file
+*.pyc
