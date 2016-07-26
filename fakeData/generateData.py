@@ -4,145 +4,175 @@
 # @Last Modified by:   t-yubai
 # @Last Modified time: 2016-07-22 13:59:00
 
+import spellRule
+import csv
+
 
 class genFakeWordPair:
-	#Three kind of fake data
-	caseIssue = {}
-	missingIssue = {}
-	spellIssue = {}
+    def __init__(self):
+        self.caseIssue = {}
+        self.missingIssue = {}
+        self.spellIssue = {}
+        self.definitons = []
+
+        self.spellIssueRule = spellRule.spellRule()
+
+    def readFile(self, filename):
+        with open(filename, 'rt') as f:
+            for name in f:
+                self.definitons.append(name[:-1])
+
+    def readWord(self, word):
+        self.definitons.append(word)
+
+    def isLowCase(self, Char):
+        return Char.islower()
+
+    def genWordSeg(self, word):
+
+        wordLen = len(word)
+        wordSeg = []
+        lo = 0
+        i = 0
+        while i < wordLen:
+            if self.isLowCase(word[i]) is False:
+                if i + 1 < wordLen and self.isLowCase(word[i + 1]) is False:
+                    if i != 0:
+                        seg = word[lo:i]
+                        wordSeg.append(seg)
+                    abbreviation = ""
+                    while i < wordLen and self.isLowCase(word[i]) is False:
+                        abbreviation += word[i]
+                        i += 1
+                    wordSeg.append(abbreviation)
+                    lo = i
+                    continue
+                else:
+                    if (i == 0):
+                        i += 1
+                        continue
+                    seg = word[lo:i]
+                    wordSeg.append(seg)
+                    lo = i
+                    i += 1
+            else:
+                i += 1
+        if lo < wordLen:
+            wordSeg.append(word[lo:])
+        return wordSeg
+
+    def genCaseIssue(self):
+        self.caseIssue = {}
+        for word in self.definitons:
+            wordSeg = self.genWordSeg(word)
+            if len(wordSeg) <= 1:
+                continue
+            else:
+                word0 = wordSeg[0]
+
+                if len(word0) == 0:
+                    return
+                if self.isLowCase(word0[0]):
+                    word0 = word0[0].upper() + word0[1:]
+                tmpword = []
+                self.caseIssue[word] = []
+                self.__genCaseIssue(wordSeg, tmpword, word, 0)
+
+    def __genCaseIssue(self, wordSeg, tmpword, word, idx):
+        if len(tmpword) == len(wordSeg):
+            data = ""
+            for part in tmpword:
+                data += part
+            self.caseIssue[word].append(data)
+            return
+        for i in range(idx, len(wordSeg)):
+            if(len(wordSeg[i]) == 0):
+                continue
+            tmpword.append(wordSeg[i])
+            self.__genCaseIssue(wordSeg, tmpword, word, i + 1)
+            tmpword.pop()
+            wordSeg[i] = wordSeg[i][0].lower() + wordSeg[i][1:]
+            tmpword.append(wordSeg[i])
+            self.__genCaseIssue(wordSeg, tmpword, word, i + 1)
+            tmpword.pop()
+
+    def genMissingIssue(self):
+        self.missingIssue = {}
+        for word in self.definitons:
+            wordSeg = self.genWordSeg(word)
+            self.missingIssue[word] = []
+            for i in range(0, len(wordSeg)):
+                name = ""
+                for j in range(0, len(wordSeg)):
+                    if (j == i):
+                        continue
+                    else:
+                        name = name + wordSeg[j]
+                self.missingIssue[word].append(name)
+
+    def __genSpellIssue(self, wrongSpellDic, tmpword, word, idx):
+        if idx == len(wrongSpellDic):
+            data = ""
+            for part in tmpword:
+                data += part
+            self.spellIssue[word].append(data)
+            return
+        for i in range(0, len(wrongSpellDic[idx])):
+            tmpword.append(wrongSpellDic[idx][i])
+            self.__genSpellIssue(wrongSpellDic, tmpword, word, idx + 1)
+            tmpword.pop()
+
+    def genSpellIssue(self):
+        self.spellIssue = {}
+        for word in self.definitons:
+            wordSeg = self.genWordSeg(word)
+
+            wrongSpellDic = []
+            for i in range(0, len(wordSeg)):
+                wrongSpellItem = self.genWrongSpell(wordSeg[i])
+                wrongSpellDic.append(wrongSpellItem)
+            tmpword = []
+            self.spellIssue[word] = []
+            self.__genSpellIssue(wrongSpellDic, tmpword, word, 0)
+
+    def genWrongSpell(self, seg):
+        wrongSpellList = []
+        for funName in self.spellIssueRule.fmap:
+            wrongSpellList.extend(self.spellIssueRule.fmap[funName](seg))
+        return wrongSpellList
 
 
-	definitons = []
+    def writeToFile(self):
+        with open('caseIssue.csv', 'wb') as f:
+            write = csv.writer(f)
+            for key in self.caseIssue.keys():
+                line = []
+                line.append(key)
+                line.extend(self.caseIssue[key])
+                write.writerow(line)
+
+        with open('missingIssue.csv', 'wb') as f:
+            write = csv.writer(f)
+            for key in self.missingIssue.keys():
+                line = []
+                line.append(key)
+                line.extend(self.missingIssue[key])
+                write.writerow(line)
+        with open('spellIssue.csv', 'wb') as f:
+            write = csv.writer(f)
+            for key in self.spellIssue.keys():
+                line = []
+                line.append(key)
+                line.extend(self.spellIssue[key])
+                write.writerow(line)
+    def genAndWrite(self):
+        self.genMissingIssue()
+        self.genCaseIssue()
+        self.genSpellIssue()
+        self.writeToFile()
 
 
+a = genFakeWordPair()
 
-	def readFile(filename):
-		with open(filename, 'rt') as f:
-			for name in f:
-				definitons.append(name[:-2])
-
-	def readWord(word):
-		definitons.append(word)
-
-
-	def isLowCase(Char):
-		return Char.islower()
-
-	def genWordSeg(word):
-
-		wordLen = len(word)
-		wordSeg = []
-		lo = 0
-		for i in range(0, wordLen):
-			if  isLowCase(word[i]) is False:
-				if i + 1 < wordLen and isLowCase(word[i+1]) is False:
-					abbreviation = ""
-					while i < wordLen and isLowCase(word[i]) is False:
-						abbreviation += word[i]
-						i += 1
-					wordSeg.append(abbreviation)
-					lo = i
-					continue
-				else:
-					if( i == 0 ): continue
-					seg = word[lo:i]
-					wordSeg.append(seg)
-					lo = i
-			else:
-				i += 1
-		wordSeg.append(word[lo:])
-		return wordSeg
-
-
-				
-	def genCaseIssue():
-        caseIssue = {}
-        for word in definitons:
-        	wordSeg = genWordSeg(word)
-        	if len(wordSeg) == 1:
-        		continue
-        	else:
-		        word0 = wordSeg[0]
-		
-		        if len(word0) == 0:
-		        	return
-		        if isLowCase(word0[0]):
-		        	word0 = word0[0].upper() + word0[1:]
-		        tmpword = []
-		        caseIssue[word] = []
-		    	__genCaseIssue(wordSeg, tmpword, word, 0)
-
-
-    def __genCaseIssue(wordSeg, tmpword, word, idx):
-        if len(tmpword) == len(wordseg):
-        	data = ""
-        	for part in tmpword:
-        		data += part
-        	caseIssue[word].append(data)
-        	return
-        for i in range(idx,len(wordseg)):
-        	tmpword.append(wordseg[i])
-        	__genCaseIssue(wordseg, tmpword, i + 1)
-        	tmpword.pop()
-        	wordseg[i] = wordseg[i][0].lower() + wordseg[i][1:]
-        	tmpword.append(wordseg[i])
-        	__genCaseIssue(wordseg, tmpword, i + 1)
-        	tmpword.pop()
-
-    def genMissingIssue():
-    	missingIssue = {}
-    	for word in definitons:
-    		wordSeg = genWordSeg(word)
-    		missingIssue[name] = []
-    		for i in range(0, len(wordSeg)):
-    			name = ""
-    			for j in range(0, len(wordSeg)):
-    				if(j == i):
-    					continue
-    				else:
-    					name = name + wordseg[j]
-    			missingIssue[word].append(name)
-
-    def __genSpellIssue(wrongSpellDic, tmpword, word, idx):
-    	if idx == len(wrongSpellDic):
-    		data = ""
-    		for part in tmpword:
-    			data += part
-    		spellIssue[word].append(data)
-    		return
-    	for i in range(0, len(wrongSpellDic[idx])):
-    		tmpword.append[wrongSpellDic[idx][i]]
-    		__genSpellIssue(wrongSpellDic, tmpword, word, idx + 1)
-    		tmpword.pop()
-
-
-    def genSpellIssue():
-    	spellIssue = {}
-    	for word in definitons:
-    		wordSeg = genWordSeg(word)
-
-    		wrongSpellDic = []
-    		for i in range(0, len(wordSeg)):
-    			wrongSpellDic.append(genWrongSpell(wordSeg[i]))
-    		tmpword = []
-    		spellIssue[word] = []
-    		__genSpellIssue(wrongSpellDic, tmpword, word, 0)
-
-    def genWrongSpell(seg):
-    	wrongSpellList = []
-    	for funName in spellIssueRule.fmap:
-    		wrongSpellList.extend(spellIssueRule.fmap[funName](seg))
-    	return wrongSpellList
-
-
-    def writeToFile()）：
-    '''TODO
-    '''
-    
-	def __init__(self):
-		self.caseIssue = {}
-		self.missingIssue = {}
-		self.spellIssue = {}
-		self.definitons = []
-
-		self.spellIssueRule = spellRule()
+a.readWord("DHCPSuperscopeV4")
+a.genCaseIssue()
