@@ -8,7 +8,6 @@ import spellRule
 import csv
 import os
 
-
 class genFakeWordPair:
     def __init__(self):
         self.caseIssue = {}
