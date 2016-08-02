@@ -17,10 +17,10 @@ class spellRule(object):
         }
     def lyIssue(self, seg):
         res = []
-        if (seg[-2:] != 'ly' or seg[-2:] != 'ty'):
+        if (seg[-2:] != 'ly' and seg[-2:] != 'ty'):
             return res
         else:
-            newSeg = seg[:-2] + 'ies'
+            newSeg = seg[:-1] + 'ies'
             res.append(newSeg)
             return res
 
@@ -85,7 +85,7 @@ class spellRule(object):
         res = []
         for fname in self.fmap:
             res.extend(self.fmap[fname](word))
-        return res
+        return set(res)
 
 
 

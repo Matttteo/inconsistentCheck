@@ -1,6 +1,15 @@
+from definitonDic.IChecker import *
+combine = combinationDifferentList()
+combine.test()
 
-from  fakeData import *
+segTool = segmentWord()
+segTool.test()
 
-generator = genFakeWordPair()
-generator.readFile('definitions.txt')
-generator.genAndWrite()
+segRef = segReference()
+segRef.test()
+
+wordRef = wordReference()
+wordRef.test()
+
+checker = icheker()
+checker.test()

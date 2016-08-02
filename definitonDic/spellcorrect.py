@@ -233,10 +233,10 @@ class spellCorrector():
         outlist = sorted(as_list, key=lambda (term, (freq, dist)): (dist, -freq))
 
         if self.verbose == 0:
-            return outlist[0]
+            return outlist[0][0]
         else:
             assert isinstance(outlist, object)
-            return outlist
+            return [outItem[0] for outItem in outlist]
 
 
 

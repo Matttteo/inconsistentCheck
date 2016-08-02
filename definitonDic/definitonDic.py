@@ -15,6 +15,7 @@ class varDictionary():
         self.candidateWordDic = collections.defaultdict(list)
         self.pos = 0
         self.wordDic = {}
+        self.commonMistakes = {}
         self.spellCorrector = spellCorrector()
         self.wrongSpellRef = spellRule()
 
@@ -57,10 +58,11 @@ class varDictionary():
         return Char.islower()
 
     def addWord(self, word):
-        for wrongSpell in self.wrongSpellRef.genIssueWord(word):
-            self.wordDic[wrongSpell] = word
         wordSeg = self.genWordSeg(word)
         self.genWordDic(wordSeg, word)
+        misTakes = self.genCommonMistakes(wordSeg)
+
+
         for seg in wordSeg:
             self.spellCorrector.create_dictionary_entry(seg)
         segLen = len(wordSeg)
@@ -72,6 +74,13 @@ class varDictionary():
                 for l in range(j, j + i):
                     combineSeg += wordSeg[l]
                 self.spellCorrector.create_dictionary_entry(combineSeg)
+
+    def genCommonMistakes(self, wordSeg):
+        misTakes = []
+        for seg in wordSeg:
+            misTakes.append(self.wrongSpellRef.genIssueWord(seg))
+        return misTakes
+
 
     def genWordDic(self, wordSeg, word):
         wordTmp = ''
