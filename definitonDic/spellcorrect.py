@@ -10,7 +10,7 @@ class spellCorrector():
         # 0: top suggestion
         # 1: all suggestions of smallest edit distance
         # 2: all suggestions <= max_edit_distance (slower, no early termination)
-        self.max_edit_distance = 3
+        self.max_edit_distance = 2
 
     def get_deletes_list(self, w):
         '''given a word, derive strings with up to max_edit_distance characters
@@ -63,7 +63,6 @@ class spellCorrector():
                     self.dictionary[item] = ([w], 0)
 
         return new_real_word_added
-
 
 
 

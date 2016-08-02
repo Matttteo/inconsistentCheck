@@ -10,13 +10,14 @@ class spellRule(object):
         self.fmap = {
             'ly': self.lyIssue,
             'doubleToSingle': self.doubleToSingleIssue,
-            'missing': self.missingCharIssue,
+            #'missing': self.missingCharIssue,
             'surplus': self.surplusIssue,
-            'random': self.randomIssue
+            #'random': self.randomIssue,
+            'ed' : self.edIssue,
         }
     def lyIssue(self, seg):
         res = []
-        if (seg[-2:] != 'ly'):
+        if (seg[-2:] != 'ly' or seg[-2:] != 'ty'):
             return res
         else:
             newSeg = seg[:-2] + 'ies'
@@ -80,6 +81,11 @@ class spellRule(object):
     def addRule(self, fun, name):
         self.fmap[name] = fun
 
+    def genIssueWord(self,word):
+        res = []
+        for fname in self.fmap:
+            res.extend(self.fmap[fname](word))
+        return res
 
 
 

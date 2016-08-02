@@ -7,6 +7,7 @@ TODO
 
 import  collections
 from spellcorrect import  spellCorrector
+from fakeData import  spellRule
 
 class varDictionary():
     def __init__(self):
@@ -15,6 +16,7 @@ class varDictionary():
         self.pos = 0
         self.wordDic = {}
         self.spellCorrector = spellCorrector()
+        self.wrongSpellRef = spellRule()
 
     def  addWord2(self, word):
         wordSeg = self.genWordSeg(word)
@@ -55,6 +57,8 @@ class varDictionary():
         return Char.islower()
 
     def addWord(self, word):
+        for wrongSpell in self.wrongSpellRef.genIssueWord(word):
+            self.wordDic[wrongSpell] = word
         wordSeg = self.genWordSeg(word)
         self.genWordDic(wordSeg, word)
         for seg in wordSeg:
@@ -62,7 +66,7 @@ class varDictionary():
         segLen = len(wordSeg)
 
 
-        for i in range(2, segLen):
+        for i in range(2, segLen+1):
             for j in range(0, segLen - i + 1):
                 combineSeg = ''
                 for l in range(j, j + i):
@@ -70,6 +74,10 @@ class varDictionary():
                 self.spellCorrector.create_dictionary_entry(combineSeg)
 
     def genWordDic(self, wordSeg, word):
+        wordTmp = ''
+        for seg in wordSeg:
+            wordTmp += seg
+        self.wordDic[wordTmp] = word
         split = [(wordSeg[0:i], wordSeg[i:]) for i in range(len(wordSeg) + 1)]
         deletes = [a + b[1:] for a ,b in split if b]
         for d in deletes:
@@ -87,18 +95,19 @@ class varDictionary():
 
         combineResult = self.combineHelper(queryResult)
 
-        varItem = [self.wordDic[cr] for cr in combineResult if cr in self.wordDic]
+        varItems = set([self.wordDic[cr] for cr in combineResult if cr in self.wordDic])
+        return list(varItems)
 
-    def __combineHelper(self, wordList, wordTemp, combineResult, idx, len):
-        if(idx == len):
+    def __combineHelper(self, wordList, wordTemp, combineResult, idx, n):
+        if(idx == n):
             result =''
             for seg in wordTemp:
                 result += seg
             combineResult.append(result)
             return
         for i in range(len(wordList[idx])):
-            wordTemp.append(wordList[idx][i])
-            self.__combineHelper(wordList, wordTemp, combineResult, idx+1, len)
+            wordTemp.append(wordList[idx][i][0])
+            self.__combineHelper(wordList, wordTemp, combineResult, idx+1, n)
             wordTemp.pop()
 
     def combineHelper(self, wordList):
@@ -116,7 +125,8 @@ class varDictionary():
             word = raw_input("Enter a var name")
             if len(word) == 0:
                 break
-            self.query(word)
+            varItems = self.query(word)
+            print varItems
 
 
 
